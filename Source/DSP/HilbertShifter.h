@@ -103,7 +103,7 @@ private:
     static std::array<AllpassZ2, 4> makeChain(const double* coefs)
     {
         std::array<AllpassZ2, 4> c;
-        for (int i = 0; i < 4; ++i) c[i].a2 = coefs[i] * coefs[i];
+        for (size_t i = 0; i < 4; ++i) c[i].a2 = coefs[i] * coefs[i];
         return c;
     }
 
