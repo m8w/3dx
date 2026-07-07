@@ -46,6 +46,12 @@ jobs:
         run: |
           echo "ARTEFACT_DIR=build/Quaternion_artefacts/Release" >> "$GITHUB_ENV"
 
+      - name: Re-sign bundles
+        if: matrix.os == 'macos-latest'
+        run: |
+          codesign --force --deep --sign - "${{ env.ARTEFACT_DIR }}/Standalone/Quaternion.app"
+          codesign --force --deep --sign - "${{ env.ARTEFACT_DIR }}/VST3/Quaternion.vst3"
+
       - name: Upload VST3
         uses: actions/upload-artifact@v4
         with:
