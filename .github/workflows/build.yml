@@ -75,6 +75,14 @@ jobs:
         with:
           path: artefacts
 
+      - name: Restore executable permissions
+        run: |
+          cd artefacts
+          find . -type f \( \
+            -name "Quaternion" -o \
+            -path "*/Contents/MacOS/Quaternion" \
+          \) -exec chmod +x {} +
+
       - name: Zip each artefact
         run: |
           cd artefacts
