@@ -78,7 +78,7 @@ void SpectrumView::paint(juce::Graphics& g)
 ParamRow::ParamRow(juce::AudioProcessorValueTreeState& apvts, const juce::String& paramId, const juce::String& text)
 {
     label.setText(text, juce::dontSendNotification);
-    label.setFont(juce::Font(12.0f));
+    label.setFont(juce::Font(juce::FontOptions(12.0f)));
     label.setColour(juce::Label::textColourId, Colours2::dim);
     addAndMakeVisible(label);
 
@@ -103,7 +103,7 @@ void ParamRow::resized()
 ParamChoiceRow::ParamChoiceRow(juce::AudioProcessorValueTreeState& apvts, const juce::String& paramId, const juce::String& text)
 {
     label.setText(text, juce::dontSendNotification);
-    label.setFont(juce::Font(12.0f));
+    label.setFont(juce::Font(juce::FontOptions(12.0f)));
     label.setColour(juce::Label::textColourId, Colours2::dim);
     addAndMakeVisible(label);
 
@@ -134,7 +134,7 @@ SectionHeaderRow::SectionHeaderRow(const juce::String& t) : text(t) {}
 void SectionHeaderRow::paint(juce::Graphics& g)
 {
     g.setColour(Colours2::faint);
-    g.setFont(juce::Font(10.0f));
+    g.setFont(juce::Font(juce::FontOptions(10.0f)));
     g.drawText(text, getLocalBounds().withTrimmedLeft(2), juce::Justification::centredLeft);
     g.drawLine(0, static_cast<float>(getHeight()) - 1, static_cast<float>(getWidth()), static_cast<float>(getHeight()) - 1);
 }
