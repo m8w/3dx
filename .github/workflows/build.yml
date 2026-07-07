@@ -1,0 +1,90 @@
+name: Build Quaternion VST3
+
+on:
+  push:
+    branches: [ "**" ]
+    tags: [ "v*" ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            name: linux
+          - os: windows-latest
+            name: windows
+          - os: macos-latest
+            name: macos
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Linux audio/GUI dev packages
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev libjack-jackd2-dev \
+            libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxcomposite-dev \
+            libfreetype6-dev libfontconfig1-dev \
+            libgtk-3-dev libwebkit2gtk-4.1-dev
+
+      - name: Configure
+        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel 2
+
+      - name: Locate artefacts
+        shell: bash
+        run: |
+          echo "ARTEFACT_DIR=build/Quaternion_artefacts/Release" >> "$GITHUB_ENV"
+
+      - name: Upload VST3
+        uses: actions/upload-artifact@v4
+        with:
+          name: Quaternion-VST3-${{ matrix.name }}
+          path: ${{ env.ARTEFACT_DIR }}/VST3/Quaternion.vst3
+          if-no-files-found: error
+
+      - name: Upload Standalone
+        uses: actions/upload-artifact@v4
+        with:
+          name: Quaternion-Standalone-${{ matrix.name }}
+          path: |
+            ${{ env.ARTEFACT_DIR }}/Standalone/Quaternion.exe
+            ${{ env.ARTEFACT_DIR }}/Standalone/Quaternion.app
+            ${{ env.ARTEFACT_DIR }}/Standalone/Quaternion
+          if-no-files-found: warn
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artefacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artefacts
+
+      - name: Zip each artefact
+        run: |
+          cd artefacts
+          for d in */; do
+            name="${d%/}"
+            zip -r "../${name}.zip" "$d"
+          done
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: "*.zip"
+          generate_release_notes: true
