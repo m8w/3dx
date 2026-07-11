@@ -1683,7 +1683,7 @@
 				"box": {
 					"id": "obj-99",
 					"maxclass": "newobj",
-					"numinlets": 3,
+					"numinlets": 4,
 					"numoutlets": 1,
 					"outlettype": [
 						"signal"
@@ -3976,7 +3976,7 @@
 					],
 					"destination": [
 						"obj-99",
-						1
+						2
 					]
 				}
 			},
