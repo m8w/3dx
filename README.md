@@ -1,6 +1,19 @@
-# Quaternion
+# Quaternion + Serenity
 
-A 4-voice VST3/Standalone instrument, ported from two Web Audio prototypes:
+This repo builds two JUCE VST3/Standalone instruments:
+
+- **Quaternion** — a 4-voice instrument, deliberately unstable: it needs a
+  held MIDI note, and HAUNT can intrude on it with ghost/memory/swap
+  intrusions.
+- **Serenity** — its calmer counterpart: a free-running ambient generator.
+  No MIDI note required — five pad voices swell and fade on independent
+  random clocks over a slowly root-drifting pentatonic/modal chord, while
+  a random scheduler fires soft FM "chime" bells. See `original-html/
+  serenity.html` for a standalone Web Audio prototype of the same idea.
+
+## Quaternion
+
+A 4-voice instrument, ported from two Web Audio prototypes:
 
 - **SHIFT** (`original-html/shift.html`) — a Bode frequency shifter built from
   8 stock `BiquadFilterNode`s realizing a Hilbert transformer, plus a
@@ -36,33 +49,12 @@ Everything else — the harmonic-series sequencer (DRONE/LADDER/WALK/PRIME/
 FRACTAL), SPIN/DRIFT rotor, HAUNT's ghost/memory/swap/stasis intrusions, and
 the Bode shifter's BALANCE/FEEDBACK/FB TIME/MIX — is a direct port.
 
-## Getting the plugin
+Quaternion ships two factory programs (host program list, or `getNumPrograms`
+in a DAW's plugin browser): **Default** and **Ambient Serenity** — the same
+DRONE pattern, slow rotor, and CONJUGATE algebra as Serenity below, recreated
+within Quaternion's own engine as a gentler starting patch.
 
-Every push builds VST3 + Standalone binaries for Windows, macOS, and Linux
-via GitHub Actions. Go to the **Actions** tab → the latest **Build
-Quaternion VST3** run → download the `Quaternion-VST3-<platform>` artifact
-for your OS, then drop the `.vst3` into your system's VST3 folder:
-
-- Windows: `C:\Program Files\Common Files\VST3\`
-- macOS: `~/Library/Audio/Plug-Ins/VST3/` or `/Library/Audio/Plug-Ins/VST3/`
-- Linux: `~/.vst3/`
-
-Pushing a tag like `v1.0.0` also cuts a GitHub Release with zipped binaries
-attached, for a permanent download link instead of a per-run artifact.
-
-## Building locally
-
-Requires CMake 3.22+ and a C++17 compiler. JUCE is fetched automatically.
-
-```sh
-cmake -B build -S .
-cmake --build build --config Release
-```
-
-On Linux, install dev packages first (see `.github/workflows/build.yml` for
-the exact list — ALSA, X11, GTK3, WebKit2GTK dev headers).
-
-## Control map
+### Control map
 
 | Section | Control | What it does |
 | --- | --- | --- |
@@ -81,6 +73,60 @@ the exact list — ALSA, X11, GTK3, WebKit2GTK dev headers).
 MIDI note input sets the root pitch (last-note-priority, matching the
 originals' single-drone-root design); the harmonic sequencer spreads
 integer multiples of that root across the 4 voices.
+
+## Serenity
+
+A free-running ambient instrument — load it and it plays on its own, no
+MIDI note required. Five `PadVoice`s hold a 5-degree scale chord (MAJOR
+PENT / MINOR PENT / DORIAN / LYDIAN) spread across two octaves; each pad's
+amplitude swells and fades on its own random-period clock (4–14s), so the
+chord breathes unevenly rather than pulsing in lockstep. A shared root
+slowly random-walks by a few semitones, bounded by `DRIFT`. Independently,
+a `ChimeBank` schedules short two-oscillator FM "bell" hits at random scale
+degrees, random octaves, and random pan, at an average rate set by
+`DENSITY`. Both layers feed a small feedback-delay network (`SPACE`) built
+from three non-commensurate, individually-damped delay lines. An incoming
+MIDI note re-centers the root but doesn't gate the sound — Serenity is
+always audible while loaded.
+
+### Control map
+
+| Section | Control | What it does |
+| --- | --- | --- |
+| Pads | SCALE | MAJOR PENT / MINOR PENT / DORIAN / LYDIAN degree table |
+| Pads | BRIGHTNESS | Lowpass cutoff on the pad bus |
+| Pads | DRIFT | How far the shared root is allowed to random-walk |
+| Chimes | DENSITY | Average rate of random FM bell hits |
+| Space | SPACE | Feedback-delay wet/dry mix |
+| Output | OUTPUT | Master level |
+
+## Getting the plugin
+
+Every push builds VST3 + Standalone binaries for Windows, macOS, and Linux
+via GitHub Actions. Go to the **Actions** tab → the latest **Build
+Quaternion VST3** run → download the `Quaternion-VST3-<platform>` or
+`Serenity-VST3-<platform>` artifact for your OS, then drop the `.vst3` into
+your system's VST3 folder:
+
+- Windows: `C:\Program Files\Common Files\VST3\`
+- macOS: `~/Library/Audio/Plug-Ins/VST3/` or `/Library/Audio/Plug-Ins/VST3/`
+- Linux: `~/.vst3/`
+
+Pushing a tag like `v1.0.0` also cuts a GitHub Release with zipped binaries
+attached, for a permanent download link instead of a per-run artifact.
+
+## Building locally
+
+Requires CMake 3.22+ and a C++17 compiler. JUCE is fetched automatically.
+Building the default target builds both Quaternion and Serenity.
+
+```sh
+cmake -B build -S .
+cmake --build build --config Release
+```
+
+On Linux, install dev packages first (see `.github/workflows/build.yml` for
+the exact list — ALSA, X11, GTK3, WebKit2GTK dev headers).
 
 ## License
 

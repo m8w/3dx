@@ -45,12 +45,15 @@ jobs:
         shell: bash
         run: |
           echo "ARTEFACT_DIR=build/Quaternion_artefacts/Release" >> "$GITHUB_ENV"
+          echo "SERENITY_ARTEFACT_DIR=build/Serenity_artefacts/Release" >> "$GITHUB_ENV"
 
       - name: Re-sign bundles
         if: matrix.os == 'macos-latest'
         run: |
           codesign --force --deep --sign - "${{ env.ARTEFACT_DIR }}/Standalone/Quaternion.app"
           codesign --force --deep --sign - "${{ env.ARTEFACT_DIR }}/VST3/Quaternion.vst3"
+          codesign --force --deep --sign - "${{ env.SERENITY_ARTEFACT_DIR }}/Standalone/Serenity.app"
+          codesign --force --deep --sign - "${{ env.SERENITY_ARTEFACT_DIR }}/VST3/Serenity.vst3"
 
       - name: Upload VST3
         uses: actions/upload-artifact@v4
@@ -67,6 +70,23 @@ jobs:
             ${{ env.ARTEFACT_DIR }}/Standalone/Quaternion.exe
             ${{ env.ARTEFACT_DIR }}/Standalone/Quaternion.app
             ${{ env.ARTEFACT_DIR }}/Standalone/Quaternion
+          if-no-files-found: warn
+
+      - name: Upload Serenity VST3
+        uses: actions/upload-artifact@v4
+        with:
+          name: Serenity-VST3-${{ matrix.name }}
+          path: ${{ env.SERENITY_ARTEFACT_DIR }}/VST3/Serenity.vst3
+          if-no-files-found: error
+
+      - name: Upload Serenity Standalone
+        uses: actions/upload-artifact@v4
+        with:
+          name: Serenity-Standalone-${{ matrix.name }}
+          path: |
+            ${{ env.SERENITY_ARTEFACT_DIR }}/Standalone/Serenity.exe
+            ${{ env.SERENITY_ARTEFACT_DIR }}/Standalone/Serenity.app
+            ${{ env.SERENITY_ARTEFACT_DIR }}/Standalone/Serenity
           if-no-files-found: warn
 
   release:
@@ -86,7 +106,9 @@ jobs:
           cd artefacts
           find . -type f \( \
             -name "Quaternion" -o \
-            -path "*/Contents/MacOS/Quaternion" \
+            -path "*/Contents/MacOS/Quaternion" -o \
+            -name "Serenity" -o \
+            -path "*/Contents/MacOS/Serenity" \
           \) -exec chmod +x {} +
 
       - name: Zip each artefact

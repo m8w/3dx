@@ -41,10 +41,10 @@ public:
     bool isMidiEffect() const override { return false; }
     double getTailLengthSeconds() const override { return 12.0; }
 
-    int getNumPrograms() override { return 1; }
-    int getCurrentProgram() override { return 0; }
-    void setCurrentProgram(int) override {}
-    const juce::String getProgramName(int) override { return {}; }
+    int getNumPrograms() override { return 2; }
+    int getCurrentProgram() override { return currentProgram; }
+    void setCurrentProgram(int index) override;
+    const juce::String getProgramName(int index) override;
     void changeProgramName(int, const juce::String&) override {}
 
     void getStateInformation(juce::MemoryBlock& destData) override;
@@ -71,6 +71,7 @@ private:
     static double softLimit(double x) { return std::tanh(x * 0.9) * 1.05; }
 
     double sampleRate = 44100.0;
+    int currentProgram = 0; // 0 = Default, 1 = Ambient Serenity (see PluginProcessor.cpp)
 
     std::atomic<float> *pWave, *pFan, *pFormant, *pScMix, *pRate, *pRange, *pGlide, *pGate, *pEnv,
         *pPattern, *pSpin, *pDrift, *pDepth, *pAlgMode, *pFmAmount, *pShiftHz, *pBalance, *pFeedback,

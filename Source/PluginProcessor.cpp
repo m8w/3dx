@@ -10,6 +10,38 @@ namespace
     constexpr std::array<double, 5> kFormantGains { 1.0, 0.7, 0.5, 0.35, 0.25 };
     constexpr std::array<double, 4> kPanL { 0.90, 0.65, 0.35, 0.10 };
     constexpr std::array<double, 4> kPanR { 0.10, 0.35, 0.65, 0.90 };
+
+    // Factory programs: each row is (paramID, raw value), applied via the
+    // parameter's own convertTo0to1 so choice params (pattern/algMode) take
+    // their index and float params take their natural-unit value.
+    struct ProgramValue { const char* id; float value; };
+
+    constexpr std::array<ProgramValue, 22> kDefaultProgram { {
+        { Params::wave, 0.0f }, { Params::fan, 0.5f }, { Params::formant, 0.3f }, { Params::scMix, 0.0f },
+        { Params::rate, 1.2f }, { Params::range, 12.f }, { Params::glide, 0.35f }, { Params::gate, 0.8f },
+        { Params::env, 0.4f }, { Params::pattern, 1.f },
+        { Params::spin, 3.f }, { Params::drift, 0.3f }, { Params::depth, 1.f }, { Params::algMode, 0.f },
+        { Params::fmAmount, 0.0f },
+        { Params::shiftHz, 1.7f }, { Params::balance, 1.f }, { Params::feedback, 0.35f }, { Params::fbTime, 0.19f },
+        { Params::shiftMix, 0.6f },
+        { Params::haunt, 0.5f }, { Params::output, 0.7f },
+    } };
+
+    // Ambient Serenity: DRONE pattern (envelope irrelevant), slow rotor,
+    // CONJUGATE algebra, formant-leaning wave for a soft choir-pad timbre,
+    // near-zero shift with light ring-mod shimmer, gentle haunt.
+    constexpr std::array<ProgramValue, 22> kAmbientSerenityProgram { {
+        { Params::wave, 0.72f }, { Params::fan, 0.30f }, { Params::formant, 0.45f }, { Params::scMix, 0.0f },
+        { Params::rate, 0.15f }, { Params::range, 8.f }, { Params::glide, 0.75f }, { Params::gate, 0.35f },
+        { Params::env, 0.15f }, { Params::pattern, 0.f },
+        { Params::spin, 0.4f }, { Params::drift, 0.25f }, { Params::depth, 0.6f }, { Params::algMode, 2.f },
+        { Params::fmAmount, 0.08f },
+        { Params::shiftHz, 0.15f }, { Params::balance, 0.6f }, { Params::feedback, 0.15f }, { Params::fbTime, 0.3f },
+        { Params::shiftMix, 0.25f },
+        { Params::haunt, 0.2f }, { Params::output, 0.65f },
+    } };
+
+    constexpr const char* kProgramNames[2] = { "Default", "Ambient Serenity" };
 }
 
 QuaternionAudioProcessor::QuaternionAudioProcessor()
@@ -261,6 +293,21 @@ void QuaternionAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     }
 
     midiMessages.clear();
+}
+
+void QuaternionAudioProcessor::setCurrentProgram(int index)
+{
+    index = juce::jlimit(0, 1, index);
+    currentProgram = index;
+    const auto& table = (index == 1) ? kAmbientSerenityProgram : kDefaultProgram;
+    for (auto& pv : table)
+        if (auto* p = apvts.getParameter(pv.id))
+            p->setValueNotifyingHost(p->convertTo0to1(pv.value));
+}
+
+const juce::String QuaternionAudioProcessor::getProgramName(int index)
+{
+    return juce::String(kProgramNames[static_cast<size_t>(juce::jlimit(0, 1, index))]);
 }
 
 juce::AudioProcessorEditor* QuaternionAudioProcessor::createEditor()
