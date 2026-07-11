@@ -49,6 +49,13 @@ I don't have a Pd install to test this against directly, so treat the first
 load the same way as the Max version originally was: a real test, not a
 guarantee.
 
+**Fixed after first real-world test:** Pd's `expr~` uses `$v1` for signal
+(vector) inlets — `$f1`/`$i1` are float/int-only in Pd, unlike Max where
+`$f1` covers both. Both `expr~ tanh(...)` calls (distortion waveshaper and
+output limiter) originally used `$f1` and failed to instantiate, which
+silently broke every signal connection touching them — including the
+entire path to `dac~`. That's now `expr~ tanh($v1)` in both places.
+
 ## Usage
 
 Open `larsen-cayley.pd` in Pd (vanilla, no extra libraries needed), turn on

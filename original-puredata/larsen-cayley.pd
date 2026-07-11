@@ -125,7 +125,7 @@
 #X obj 2100 430 expr $f1/127.;
 #X obj 2100 465 expr 1.-($f1/127.);
 #X obj 2100 500 *~ 1.;
-#X obj 2100 535 expr~ tanh($f1);
+#X obj 2100 535 expr~ tanh($v1);
 #X obj 2100 570 *~ 0.35;
 #X obj 2100 605 *~ 0.65;
 #X obj 2100 640 +~;
@@ -174,7 +174,7 @@
 #X obj 2680 70 vsl 24 140 0 127 0 0 empty empty empty 0 -9 0 10 -262144 -1 -1 0 0;
 #X obj 2680 220 expr $f1/127.*1.6;
 #X obj 2680 255 *~ 1.1;
-#X obj 2680 290 expr~ tanh($f1);
+#X obj 2680 290 expr~ tanh($v1);
 #X obj 2680 325 env~;
 #X obj 2680 360 vu 24 120 empty empty -1 -8 0 10 -66577 -1 1 0;
 #X obj 2680 420 dac~ 1 2;
