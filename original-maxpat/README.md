@@ -67,3 +67,27 @@ above unity are the point, but they can get loud fast.
 This lives alongside `original-html/shift.html` and `original-html/cayley-ii.html`
 as a self-contained prototype; it was not ported into the JUCE `Quaternion`
 plugin in `Source/`, which remains SHIFT + CAYLEY II only.
+
+## If Max crashes on load or on enabling audio
+
+The patch itself has been validated (every patch cord references a real,
+in-range inlet/outlet, and no two boxes' rectangles overlap — see the
+generator script's self-checks), so a crash is unlikely to be caused by the
+patch content itself. Two things worth checking on the Max side first:
+
+- **License state.** If Max's title bar shows "saving disabled" or a
+  "start trial or authorize" banner, it's running unlicensed. Crash reports
+  whose stack trace lives entirely in Max's own package/menu bookkeeping
+  (`packages_cloneinfo`, `dictionary_clone`, `jmenu_updatecommand` — nothing
+  from this patch) point at that trial/license-check code path, which seems
+  to get exercised whenever a window gains focus or audio is turned on.
+  Authorize or properly start the trial, then retry.
+- **Isolate from the patch.** Open a brand-new blank patcher, click around
+  between windows, and toggle audio on. If Max still crashes with the same
+  signature, it confirms the instability is in the Max install/license state,
+  not in `larsen-cayley.maxpat`.
+
+The patch was built and statically verified in a non-Max environment (no
+Max 9 install available to test-load it directly), so if something behaves
+unexpectedly beyond the above, note which object/section and it can be
+adjusted.
