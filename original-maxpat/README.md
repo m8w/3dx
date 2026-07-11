@@ -46,16 +46,19 @@ you don't have to find and raise every slider first.
 
 ## Controls
 
-| Control | Effect |
-| --- | --- |
-| ENGINE (toggle) | Starts/stops the three background modulation clocks (voice pitch, Larsen delay/filter, reverb/drive macro drift) |
-| PANIC (button) | Instantly zeroes the Larsen feedback gain if it runs away |
-| SPIN | Rotor rate — how fast the Cayley cross-mix rotates |
-| CROSS | Depth of the octonion-style nonlinear cross term |
-| LARSEN FEEDBACK | Feedback gain in the delay/resonator loop; above ~1.0 it self-oscillates independent of the Cayley input |
-| DISTORTION DRIVE / MIX | Pre-gain into the tanh waveshaper, and dry/wet blend |
-| REVERB MIX | Dry/wet blend of the Schroeder reverb |
-| OUTPUT GAIN | Final level before the safety limiter |
+Each control sits directly above the section it drives — no separate control
+panel with cords running the length of the patch:
+
+| Control | Lives in | Effect |
+| --- | --- | --- |
+| ENGINE (toggle) | left transport column | Starts/stops the three background modulation clocks (voice pitch, Larsen delay/filter, reverb/drive macro drift) |
+| PANIC (button) | left transport column | Instantly zeroes the Larsen feedback gain if it runs away |
+| SPIN | ROTOR | Rotor rate — how fast the Cayley cross-mix rotates |
+| CROSS | CAYLEY CROSS-MIX | Depth of the octonion-style nonlinear cross term |
+| LARSEN FEEDBACK | LARSEN FEEDBACK LOOP | Feedback gain in the delay/resonator loop; above ~1.0 it self-oscillates independent of the Cayley input |
+| DISTORTION DRIVE / MIX | DISTORTION | Pre-gain into the tanh waveshaper, and dry/wet blend |
+| REVERB MIX | REVERB | Dry/wet blend of the Schroeder reverb |
+| OUTPUT GAIN | OUTPUT | Final level before the safety limiter |
 
 The three clocks each drive an independent `drunk` random walk (voice pitch,
 delay time + filter frequency, and left for future macro parameters), smoothed
