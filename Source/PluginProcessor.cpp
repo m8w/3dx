@@ -319,6 +319,7 @@ void QuaternionAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
     auto state = apvts.copyState();
     std::unique_ptr<juce::XmlElement> xml(state.createXml());
+    xml->setAttribute("themeIndex", themeIndex.load());
     copyXmlToBinary(*xml, destData);
 }
 
@@ -326,7 +327,10 @@ void QuaternionAudioProcessor::setStateInformation(const void* data, int sizeInB
 {
     std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
     if (xml != nullptr && xml->hasTagName(apvts.state.getType()))
+    {
+        themeIndex.store(xml->getIntAttribute("themeIndex", 0));
         apvts.replaceState(juce::ValueTree::fromXml(*xml));
+    }
 }
 
 // This creates new instances of the plugin.

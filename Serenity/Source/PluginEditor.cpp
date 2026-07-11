@@ -1,22 +1,56 @@
 #include "PluginEditor.h"
 #include "Params.h"
 
-namespace Colours2
+//==============================================================================
+void ThemeSwatchButton::paint(juce::Graphics& g)
 {
-    static const juce::Colour bg { 0xff0a0a0c };
-    static const juce::Colour panel { 0xff101014 };
-    static const juce::Colour line { 0xff1d1d24 };
-    static const juce::Colour fg { 0xffc9c9ce };
-    static const juce::Colour dim { 0xff5c5c66 };
-    static const juce::Colour faint { 0xff33333c };
-    static const juce::Colour acc { 0xffffb347 };
+    auto b = getLocalBounds().toFloat();
+    g.setColour(palette.acc);
+    g.fillRect(b);
+    g.setColour(juce::Colours::white.withAlpha(0.85f));
+    g.setFont(juce::Font(juce::FontOptions(8.0f)));
+    g.drawText(palette.name, getLocalBounds(), juce::Justification::centred);
+    if (selected)
+    {
+        g.setColour(palette.acc3);
+        g.drawRect(getLocalBounds(), 2);
+    }
+}
+
+//==============================================================================
+ThemeRow::ThemeRow()
+{
+    int i = 0;
+    for (auto& p : themes())
+    {
+        auto sw = std::make_unique<ThemeSwatchButton>(p, i);
+        sw->onClick = [this](int idx) { if (onThemeSelected) onThemeSelected(idx); };
+        addAndMakeVisible(*sw);
+        swatches.push_back(std::move(sw));
+        ++i;
+    }
+}
+
+void ThemeRow::resized()
+{
+    auto b = getLocalBounds();
+    int n = static_cast<int>(swatches.size());
+    int w = n > 0 ? b.getWidth() / n : b.getWidth();
+    for (int i = 0; i < n; ++i)
+        swatches[static_cast<size_t>(i)]->setBounds(b.getX() + i * w, b.getY(), (i == n - 1 ? b.getWidth() - i * w : w), b.getHeight());
+}
+
+void ThemeRow::setSelectedIndex(int idx)
+{
+    for (int i = 0; i < static_cast<int>(swatches.size()); ++i)
+        swatches[static_cast<size_t>(i)]->setSelected(i == idx);
 }
 
 //==============================================================================
 void BreathingOrb::paint(juce::Graphics& g)
 {
     auto b = getLocalBounds().toFloat();
-    g.fillAll(Colours2::panel);
+    g.fillAll(pal.panel);
 
     float level = proc.outputLevel.load(std::memory_order_relaxed);
     float cx = b.getCentreX(), cy = b.getCentreY();
@@ -26,12 +60,12 @@ void BreathingOrb::paint(juce::Graphics& g)
     if (hue > 360.0f) hue -= 360.0f;
 
     juce::ColourGradient grad(juce::Colour::fromHSV(hue / 360.0f, 0.55f, 0.75f, 0.55f), cx, cy,
-                               Colours2::panel.withAlpha(0.0f), cx, cy - base * 2.2f, true);
+                               pal.panel.withAlpha(0.0f), cx, cy - base * 2.2f, true);
     grad.addColour(0.5, juce::Colour::fromHSV(std::fmod(hue + 30.0f, 360.0f) / 360.0f, 0.55f, 0.6f, 0.18f));
     g.setGradientFill(grad);
     g.fillEllipse(cx - base * 2.2f, cy - base * 2.2f, base * 4.4f, base * 4.4f);
 
-    g.setColour(juce::Colours::white.withAlpha(0.25f));
+    g.setColour(pal.fg.withAlpha(0.35f));
     g.drawEllipse(cx - base, cy - base, base * 2.0f, base * 2.0f, 1.0f);
 }
 
@@ -40,17 +74,10 @@ ParamRow::ParamRow(juce::AudioProcessorValueTreeState& apvts, const juce::String
 {
     label.setText(text, juce::dontSendNotification);
     label.setFont(juce::Font(juce::FontOptions(12.0f)));
-    label.setColour(juce::Label::textColourId, Colours2::dim);
     addAndMakeVisible(label);
-
-    slider.setColour(juce::Slider::trackColourId, Colours2::faint);
-    slider.setColour(juce::Slider::thumbColourId, Colours2::acc);
-    slider.setColour(juce::Slider::textBoxTextColourId, Colours2::fg);
-    slider.setColour(juce::Slider::textBoxOutlineColourId, Colours2::line);
-    slider.setColour(juce::Slider::backgroundColourId, Colours2::panel);
     addAndMakeVisible(slider);
-
     attachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment>(apvts, paramId, slider);
+    setPalette(themes()[0]);
 }
 
 void ParamRow::resized()
@@ -60,17 +87,23 @@ void ParamRow::resized()
     slider.setBounds(b);
 }
 
+void ParamRow::setPalette(const Palette& p)
+{
+    label.setColour(juce::Label::textColourId, p.dim);
+    slider.setColour(juce::Slider::trackColourId, p.faint);
+    slider.setColour(juce::Slider::thumbColourId, p.acc);
+    slider.setColour(juce::Slider::textBoxTextColourId, p.fg);
+    slider.setColour(juce::Slider::textBoxOutlineColourId, p.line);
+    slider.setColour(juce::Slider::backgroundColourId, p.panel);
+    repaint();
+}
+
 //==============================================================================
 ParamChoiceRow::ParamChoiceRow(juce::AudioProcessorValueTreeState& apvts, const juce::String& paramId, const juce::String& text)
 {
     label.setText(text, juce::dontSendNotification);
     label.setFont(juce::Font(juce::FontOptions(12.0f)));
-    label.setColour(juce::Label::textColourId, Colours2::dim);
     addAndMakeVisible(label);
-
-    box.setColour(juce::ComboBox::backgroundColourId, Colours2::panel);
-    box.setColour(juce::ComboBox::textColourId, Colours2::fg);
-    box.setColour(juce::ComboBox::outlineColourId, Colours2::line);
     addAndMakeVisible(box);
 
     if (auto* choiceParam = dynamic_cast<juce::AudioParameterChoice*>(apvts.getParameter(paramId)))
@@ -80,6 +113,7 @@ ParamChoiceRow::ParamChoiceRow(juce::AudioProcessorValueTreeState& apvts, const 
             box.addItem(choice, i++);
     }
     attachment = std::make_unique<juce::AudioProcessorValueTreeState::ComboBoxAttachment>(apvts, paramId, box);
+    setPalette(themes()[0]);
 }
 
 void ParamChoiceRow::resized()
@@ -89,12 +123,21 @@ void ParamChoiceRow::resized()
     box.setBounds(b);
 }
 
+void ParamChoiceRow::setPalette(const Palette& p)
+{
+    label.setColour(juce::Label::textColourId, p.dim);
+    box.setColour(juce::ComboBox::backgroundColourId, p.panel);
+    box.setColour(juce::ComboBox::textColourId, p.fg);
+    box.setColour(juce::ComboBox::outlineColourId, p.line);
+    repaint();
+}
+
 //==============================================================================
 SectionHeaderRow::SectionHeaderRow(const juce::String& t) : text(t) {}
 
 void SectionHeaderRow::paint(juce::Graphics& g)
 {
-    g.setColour(Colours2::faint);
+    g.setColour(pal.faint);
     g.setFont(juce::Font(juce::FontOptions(10.0f)));
     g.drawText(text, getLocalBounds().withTrimmedLeft(2), juce::Justification::centredLeft);
     g.drawLine(0, static_cast<float>(getHeight()) - 1, static_cast<float>(getWidth()), static_cast<float>(getHeight()) - 1);
@@ -104,6 +147,13 @@ void SectionHeaderRow::paint(juce::Graphics& g)
 SerenityAudioProcessorEditor::SerenityAudioProcessorEditor(SerenityAudioProcessor& p)
     : juce::AudioProcessorEditor(&p), proc(p), orb(p)
 {
+    addAndMakeVisible(themeRow);
+    themeRow.onThemeSelected = [this](int idx)
+    {
+        proc.setThemeIndex(idx);
+        applyPalette(idx);
+    };
+
     addAndMakeVisible(orb);
 
     addAndMakeVisible(viewport);
@@ -121,6 +171,8 @@ SerenityAudioProcessorEditor::SerenityAudioProcessorEditor(SerenityAudioProcesso
     addSection("SPACE / OUTPUT");
     addRow(Params::space, "SPACE");
     addRow(Params::output, "OUTPUT");
+
+    applyPalette(juce::jlimit(0, static_cast<int>(themes().size()) - 1, proc.getThemeIndex()));
 
     setResizable(true, true);
     setSize(420, 480);
@@ -148,14 +200,28 @@ void SerenityAudioProcessorEditor::addChoiceRow(const juce::String& paramId, con
     rows.push_back(std::move(row));
 }
 
+void SerenityAudioProcessorEditor::applyPalette(int themeIndex)
+{
+    currentPalette = themes()[static_cast<size_t>(themeIndex)];
+    for (auto& c : rows)
+        if (auto* themeable = dynamic_cast<Themeable*>(c.get()))
+            themeable->setPalette(currentPalette);
+    orb.setPalette(currentPalette);
+    themeRow.setSelectedIndex(themeIndex);
+    repaint();
+}
+
 void SerenityAudioProcessorEditor::paint(juce::Graphics& g)
 {
-    g.fillAll(Colours2::bg);
+    g.fillAll(currentPalette.bg);
 }
 
 void SerenityAudioProcessorEditor::resized()
 {
     auto b = getLocalBounds().reduced(10);
+
+    themeRow.setBounds(b.removeFromTop(26));
+    b.removeFromTop(8);
 
     orb.setBounds(b.removeFromTop(160));
     b.removeFromTop(8);

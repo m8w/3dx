@@ -52,6 +52,11 @@ public:
 
     juce::AudioProcessorValueTreeState apvts;
 
+    // UI-only setting (not a host parameter): index into Theme.h's themes(),
+    // persisted alongside apvts state so the chosen look survives reload.
+    int getThemeIndex() const { return themeIndex.load(); }
+    void setThemeIndex(int i) { themeIndex.store(i); }
+
     // Read by the editor for the goniometer / spectrum displays.
     static constexpr int kScopeSize = 1024;
     struct ScopeData
@@ -72,6 +77,7 @@ private:
 
     double sampleRate = 44100.0;
     int currentProgram = 0; // 0 = Default, 1 = Ambient Serenity (see PluginProcessor.cpp)
+    std::atomic<int> themeIndex { 0 };
 
     std::atomic<float> *pWave, *pFan, *pFormant, *pScMix, *pRate, *pRange, *pGlide, *pGate, *pEnv,
         *pPattern, *pSpin, *pDrift, *pDepth, *pAlgMode, *pFmAmount, *pShiftHz, *pBalance, *pFeedback,

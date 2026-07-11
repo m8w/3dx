@@ -52,7 +52,7 @@
 :root{
   --bg:#0a0a0c; --panel:#101014; --line:#1d1d24;
   --fg:#c9c9ce; --dim:#5c5c66; --faint:#33333c;
-  --acc:#ffb347; --acc2:#47d7ff; --ghost:#ff5566;
+  --acc:#ffb347; --acc2:#47d7ff; --acc3:#ffe66d; --ghost:#ff5566;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
@@ -90,8 +90,14 @@ button.on{color:var(--bg);background:var(--acc);border-color:var(--acc);font-wei
 .ctl input[type=range]::-moz-range-thumb{width:16px;height:16px;background:var(--bg);
   border:2px solid var(--acc);border-radius:0}
 .ctl .val{flex:0 0 92px;text-align:right;font-size:11px;color:var(--fg)}
+.ctl:focus-within .val{color:var(--acc3)}
 footer{margin-top:18px;color:var(--dim);font-size:10px;line-height:1.7;letter-spacing:.04em}
 footer b{color:var(--acc);font-weight:400}
+#themerow{display:flex;gap:6px;margin-bottom:10px}
+.swatch{flex:1;height:26px;border:1px solid var(--line);cursor:pointer;
+  font-size:8px;letter-spacing:.06em;display:flex;align-items:center;justify-content:center;
+  color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.65);-webkit-user-select:none;user-select:none}
+.swatch.on{outline:2px solid var(--acc3);outline-offset:-2px}
 @media(max-width:560px){ #scopes{flex-direction:column} #shadowBox{flex:1} }
 </style>
 </head>
@@ -101,6 +107,8 @@ footer b{color:var(--acc);font-weight:400}
     <h1>CAYLEY II <span>//</span> octonion harmonic sequencer</h1>
     <div id="sub">integer ladders &middot; wave mixtures &middot; haunted</div>
   </header>
+
+  <div id="themerow"></div>
 
   <div id="scopes">
     <div id="shadowBox"><canvas id="shadow"></canvas></div>
@@ -201,6 +209,52 @@ var ctx = null, running = false;
 var N = {};
 var BUFSIZE = 2048;
 var TAU = Math.PI * 2;
+
+// -- theme spectrum: dark monochrome house style -> high-contrast funhouse --
+var THEMES = [
+  { key:'void',     name:'VOID',     bg:'#0a0a0c', panel:'#101014', line:'#1d1d24', fg:'#c9c9ce', dim:'#5c5c66', faint:'#33333c', acc:'#ffb347', acc2:'#47d7ff', acc3:'#ffe66d', ghost:'#ff5566' },
+  { key:'dusk',     name:'DUSK',     bg:'#0d0a14', panel:'#171226', line:'#2a1f3d', fg:'#e8e2f5', dim:'#8a7ba3', faint:'#4a3d63', acc:'#ff6ec7', acc2:'#34e5c8', acc3:'#ffd23f', ghost:'#ff6ec7' },
+  { key:'neon',     name:'NEON',     bg:'#0a0014', panel:'#150726', line:'#2d0f4d', fg:'#f5eaff', dim:'#a684c9', faint:'#5c2e8a', acc:'#ff2e88', acc2:'#00f0ff', acc3:'#c6ff00', ghost:'#ff2e88' },
+  { key:'candy',    name:'CANDY',    bg:'#fff4fb', panel:'#ffffff', line:'#ffd1ec', fg:'#3a1249', dim:'#a15fb3', faint:'#ffe3f5', acc:'#ff3d81', acc2:'#00c2ff', acc3:'#ffbe0b', ghost:'#ff3d81' },
+  { key:'funhouse', name:'FUNHOUSE', bg:'#fff9e6', panel:'#ffffff', line:'#ff006e', fg:'#14003d', dim:'#ff5400', faint:'#ffd400', acc:'#ff006e', acc2:'#3a86ff', acc3:'#06ffa5', ghost:'#ff006e' }
+];
+var curTheme = THEMES[0];
+function hexToRgb(hex){
+  var r = parseInt(hex.substr(1,2),16), g = parseInt(hex.substr(3,2),16), b = parseInt(hex.substr(5,2),16);
+  return r + ',' + g + ',' + b;
+}
+function rgba(hex, a){ return 'rgba(' + hexToRgb(hex) + ',' + a + ')'; }
+function applyTheme(idx){
+  curTheme = THEMES[idx];
+  var root = document.documentElement.style;
+  root.setProperty('--bg', curTheme.bg);
+  root.setProperty('--panel', curTheme.panel);
+  root.setProperty('--line', curTheme.line);
+  root.setProperty('--fg', curTheme.fg);
+  root.setProperty('--dim', curTheme.dim);
+  root.setProperty('--faint', curTheme.faint);
+  root.setProperty('--acc', curTheme.acc);
+  root.setProperty('--acc2', curTheme.acc2);
+  root.setProperty('--acc3', curTheme.acc3);
+  root.setProperty('--ghost', curTheme.ghost);
+  try { localStorage.setItem('houseTheme', String(idx)); } catch (e) {}
+  var row = document.getElementById('themerow');
+  if (row) Array.prototype.forEach.call(row.children, function(el, i){ el.classList.toggle('on', i === idx); });
+}
+(function(){
+  var row = document.getElementById('themerow');
+  THEMES.forEach(function(t, i){
+    var b = document.createElement('div');
+    b.className = 'swatch';
+    b.textContent = t.name;
+    b.style.background = t.acc;
+    b.addEventListener('click', function(){ applyTheme(i); });
+    row.appendChild(b);
+  });
+  var saved = 0;
+  try { saved = parseInt(localStorage.getItem('houseTheme'), 10) || 0; } catch (e) {}
+  applyTheme(Math.max(0, Math.min(THEMES.length - 1, saved)));
+})();
 
 // ---------------- octonion algebra ----------------
 var TRIPLES = [[1,2,4],[2,3,5],[3,4,6],[4,5,7],[5,6,1],[6,7,2],[7,1,3]];
@@ -794,7 +848,7 @@ function fit(){
   sh.setTransform(dpr,0,0,dpr,0,0);
   fg.setTransform(dpr,0,0,dpr,0,0);
   sg.setTransform(dpr,0,0,dpr,0,0);
-  sh.fillStyle = '#101014'; sh.fillRect(0,0,w,w);
+  sh.fillStyle = curTheme.panel; sh.fillRect(0,0,w,w);
 }
 window.addEventListener('resize', fit);
 fit();
@@ -804,15 +858,15 @@ function drawShadow(now, dt){
   var tumble = 1;
   if (now < fx.stasisUntil) tumble = 4;
 
-  sh.fillStyle = 'rgba(10,10,12,0.20)';
+  sh.fillStyle = rgba(curTheme.bg, 0.20);
   sh.fillRect(0, 0, w, w);
-  sh.strokeStyle = '#1d1d24'; sh.lineWidth = 1;
+  sh.strokeStyle = curTheme.line; sh.lineWidth = 1;
   sh.beginPath();
   sh.moveTo(w/2,0); sh.lineTo(w/2,w); sh.moveTo(0,w/2); sh.lineTo(w,w/2);
   sh.stroke();
 
   if (!(ctx && running)) {
-    sh.fillStyle = '#33333c'; sh.font = '11px IBM Plex Mono, monospace';
+    sh.fillStyle = curTheme.faint; sh.font = '11px IBM Plex Mono, monospace';
     sh.textAlign = 'center';
     sh.fillText('shadow of \uD835\uDD46', w/2, w/2 - 8);
     sh.textAlign = 'left';
@@ -847,7 +901,7 @@ function drawShadow(now, dt){
 
   var passes = ghosting ? 2 : 1, p;
   for (p = 0; p < passes; p++){
-    sh.fillStyle = p === 0 ? '#ffb347' : (Math.random() < 0.5 ? '#ff5566' : '#47d7ff');
+    sh.fillStyle = p === 0 ? curTheme.acc : (Math.random() < 0.5 ? curTheme.ghost : curTheme.acc2);
     var offX = p === 0 ? 0 : (Math.random()-0.5)*8;
     var offY = p === 0 ? 0 : (Math.random()-0.5)*8;
     var lag  = p === 0 ? 0 : 300;
@@ -870,7 +924,7 @@ function drawShadow(now, dt){
 
 function drawFano(now){
   var w = fano.clientWidth, h = fano.clientHeight;
-  fg.fillStyle = '#101014'; fg.fillRect(0, 0, w, h);
+  fg.fillStyle = curTheme.panel; fg.fillRect(0, 0, w, h);
   var cx = w/2, cy = h/2, R = Math.min(w, h) * 0.36;
   var pos = [], i, a;
   for (i = 0; i < 7; i++){
@@ -882,7 +936,7 @@ function drawFano(now){
   for (t = 0; t < 7; t++){
     tri = TRIPLES[t];
     hot = swapping && (tri.indexOf(fx.swapA) >= 0 || tri.indexOf(fx.swapB) >= 0);
-    fg.strokeStyle = hot ? '#47d7ff' : '#1d1d24';
+    fg.strokeStyle = hot ? curTheme.acc2 : curTheme.line;
     fg.lineWidth = hot ? 1.2 : 1;
     fg.beginPath();
     fg.moveTo(pos[tri[0]-1][0], pos[tri[0]-1][1]);
@@ -900,26 +954,26 @@ function drawFano(now){
       if (ii === fx.swapA) ii = fx.swapB;
       else if (ii === fx.swapB) ii = fx.swapA;
     }
-    fg.fillStyle = 'rgba(255,179,71,' + (0.15 + 0.85 * lv).toFixed(2) + ')';
+    fg.fillStyle = rgba(curTheme.acc, (0.15 + 0.85 * lv).toFixed(2));
     fg.beginPath(); fg.arc(pos[i][0], pos[i][1], r2, 0, TAU); fg.fill();
-    fg.fillStyle = '#5c5c66'; fg.font = '9px IBM Plex Mono, monospace';
+    fg.fillStyle = curTheme.dim; fg.font = '9px IBM Plex Mono, monospace';
     fg.fillText('e' + ii + '\u00B7h' + core.targetH[i+1], pos[i][0] + r2 + 2, pos[i][1] + 3);
   }
   lv = Math.min(1, core.lvl[0] * 6);
-  fg.fillStyle = 'rgba(71,215,255,' + (0.15 + 0.85 * lv).toFixed(2) + ')';
+  fg.fillStyle = rgba(curTheme.acc2, (0.15 + 0.85 * lv).toFixed(2));
   fg.beginPath(); fg.arc(cx, cy, 2.5 + lv * 6, 0, TAU); fg.fill();
-  fg.fillStyle = '#5c5c66';
+  fg.fillStyle = curTheme.dim;
   fg.fillText('e0\u00B7h' + core.targetH[0], cx + 8, cy + 3);
 }
 
 function drawSpec(){
   var sw = spec.clientWidth, shh = spec.clientHeight;
-  sg.fillStyle = '#101014'; sg.fillRect(0, 0, sw, shh);
+  sg.fillStyle = curTheme.panel; sg.fillRect(0, 0, sw, shh);
   if (!(ctx && running)) return;
   N.anS.getByteFrequencyData(bufS);
   var nyq = ctx.sampleRate / 2, bins = N.anS.frequencyBinCount;
   var px, f, bi, v, y;
-  sg.strokeStyle = '#ffb347'; sg.lineWidth = 1;
+  sg.strokeStyle = curTheme.acc; sg.lineWidth = 1;
   sg.beginPath();
   for (px = 0; px < sw; px++){
     f = 20 * Math.pow(nyq / 20, px / sw);

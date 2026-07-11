@@ -38,7 +38,7 @@
 :root{
   --bg:#0a0a0c; --panel:#101014; --line:#1d1d24;
   --fg:#c9c9ce; --dim:#5c5c66; --faint:#33333c;
-  --acc:#ffb347; --acc2:#47d7ff;
+  --acc:#ffb347; --acc2:#47d7ff; --acc3:#ffe66d;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
@@ -71,8 +71,14 @@ button.on{color:var(--bg);background:var(--acc);border-color:var(--acc);font-wei
 .ctl input[type=range]::-moz-range-thumb{width:16px;height:16px;background:var(--bg);
   border:2px solid var(--acc);border-radius:0}
 .ctl .val{flex:0 0 86px;text-align:right;font-size:11px;color:var(--fg)}
+.ctl:focus-within .val{color:var(--acc3)}
 footer{margin-top:18px;color:var(--dim);font-size:10px;line-height:1.7;letter-spacing:.04em}
 footer b{color:var(--acc);font-weight:400}
+#themerow{display:flex;gap:6px;margin-bottom:12px}
+.swatch{flex:1;height:26px;border:1px solid var(--line);cursor:pointer;
+  font-size:8px;letter-spacing:.06em;display:flex;align-items:center;justify-content:center;
+  color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.65);-webkit-user-select:none;user-select:none}
+.swatch.on{outline:2px solid var(--acc3);outline-offset:-2px}
 </style>
 </head>
 <body>
@@ -81,6 +87,8 @@ footer b{color:var(--acc);font-weight:400}
     <h1>SERENITY <span>//</span> ambient random generator</h1>
     <div id="sub">no two passes alike</div>
   </header>
+
+  <div id="themerow"></div>
 
   <div id="orbBox"><canvas id="orb"></canvas></div>
   <div id="status">tap POWER — a slow pentatonic chord, wandering root, and random bells</div>
@@ -120,6 +128,51 @@ var AC = window.AudioContext || window.webkitAudioContext;
 var ctx = null, running = false;
 var N = {};   // audio nodes
 var chimeTimer = null, driftTimer = null;
+
+// -- theme spectrum: dark monochrome house style -> high-contrast funhouse --
+var THEMES = [
+  { key:'void',     name:'VOID',     bg:'#0a0a0c', panel:'#101014', line:'#1d1d24', fg:'#c9c9ce', dim:'#5c5c66', faint:'#33333c', acc:'#ffb347', acc2:'#47d7ff', acc3:'#ffe66d', sat:45, light:55 },
+  { key:'dusk',     name:'DUSK',     bg:'#0d0a14', panel:'#171226', line:'#2a1f3d', fg:'#e8e2f5', dim:'#8a7ba3', faint:'#4a3d63', acc:'#ff6ec7', acc2:'#34e5c8', acc3:'#ffd23f', sat:60, light:60 },
+  { key:'neon',     name:'NEON',     bg:'#0a0014', panel:'#150726', line:'#2d0f4d', fg:'#f5eaff', dim:'#a684c9', faint:'#5c2e8a', acc:'#ff2e88', acc2:'#00f0ff', acc3:'#c6ff00', sat:90, light:55 },
+  { key:'candy',    name:'CANDY',    bg:'#fff4fb', panel:'#ffffff', line:'#ffd1ec', fg:'#3a1249', dim:'#a15fb3', faint:'#ffe3f5', acc:'#ff3d81', acc2:'#00c2ff', acc3:'#ffbe0b', sat:85, light:65 },
+  { key:'funhouse', name:'FUNHOUSE', bg:'#fff9e6', panel:'#ffffff', line:'#ff006e', fg:'#14003d', dim:'#ff5400', faint:'#ffd400', acc:'#ff006e', acc2:'#3a86ff', acc3:'#06ffa5', sat:95, light:55 }
+];
+var curTheme = THEMES[0];
+function hexToRgb(hex){
+  var r = parseInt(hex.substr(1,2),16), g = parseInt(hex.substr(3,2),16), b = parseInt(hex.substr(5,2),16);
+  return r + ',' + g + ',' + b;
+}
+function rgba(hex, a){ return 'rgba(' + hexToRgb(hex) + ',' + a + ')'; }
+function applyTheme(idx){
+  curTheme = THEMES[idx];
+  var root = document.documentElement.style;
+  root.setProperty('--bg', curTheme.bg);
+  root.setProperty('--panel', curTheme.panel);
+  root.setProperty('--line', curTheme.line);
+  root.setProperty('--fg', curTheme.fg);
+  root.setProperty('--dim', curTheme.dim);
+  root.setProperty('--faint', curTheme.faint);
+  root.setProperty('--acc', curTheme.acc);
+  root.setProperty('--acc2', curTheme.acc2);
+  root.setProperty('--acc3', curTheme.acc3);
+  try { localStorage.setItem('houseTheme', String(idx)); } catch (e) {}
+  var row = document.getElementById('themerow');
+  if (row) Array.prototype.forEach.call(row.children, function(el, i){ el.classList.toggle('on', i === idx); });
+}
+(function(){
+  var row = document.getElementById('themerow');
+  THEMES.forEach(function(t, i){
+    var b = document.createElement('div');
+    b.className = 'swatch';
+    b.textContent = t.name;
+    b.style.background = t.acc;
+    b.addEventListener('click', function(){ applyTheme(i); });
+    row.appendChild(b);
+  });
+  var saved = 0;
+  try { saved = parseInt(localStorage.getItem('houseTheme'), 10) || 0; } catch (e) {}
+  applyTheme(Math.max(0, Math.min(THEMES.length - 1, saved)));
+})();
 
 var P = { density:0.35, space:0.55, tone:0.5, drift:0.4, out:0.7 };
 
@@ -325,7 +378,7 @@ function fit(){
   var w = orb.parentNode.clientWidth, h = 220;
   orb.width = w * dpr; orb.height = h * dpr;
   og.setTransform(dpr, 0, 0, dpr, 0, 0);
-  og.fillStyle = '#101014'; og.fillRect(0, 0, w, h);
+  og.fillStyle = curTheme.panel; og.fillRect(0, 0, w, h);
 }
 window.addEventListener('resize', fit);
 fit();
@@ -344,7 +397,7 @@ function draw(ts){
   var dt = lastT ? (ts - lastT) / 1000 : 0.016;
   lastT = ts;
 
-  og.fillStyle = 'rgba(10,10,12,0.16)';
+  og.fillStyle = rgba(curTheme.bg, 0.16);
   og.fillRect(0, 0, w, h);
 
   var level = rms();
@@ -354,23 +407,24 @@ function draw(ts){
   hue += dt * (2 + level * 10);
   if (hue > 360) hue -= 360;
 
+  var sat = curTheme.sat, lgt = curTheme.light;
   var grad = og.createRadialGradient(cx, cy, 0, cx, cy, base * 2.2);
-  grad.addColorStop(0, 'hsla(' + hue + ', 70%, 65%, 0.55)');
-  grad.addColorStop(0.5, 'hsla(' + (hue + 30) + ', 70%, 50%, 0.18)');
-  grad.addColorStop(1, 'rgba(10,10,12,0)');
+  grad.addColorStop(0, 'hsla(' + hue + ', ' + sat + '%, ' + lgt + '%, 0.55)');
+  grad.addColorStop(0.5, 'hsla(' + (hue + 30) + ', ' + sat + '%, ' + Math.max(30, lgt - 15) + '%, 0.18)');
+  grad.addColorStop(1, rgba(curTheme.bg, 0));
   og.fillStyle = grad;
   og.beginPath();
   og.arc(cx, cy, base * 2.2, 0, Math.PI * 2);
   og.fill();
 
-  og.strokeStyle = 'rgba(255,255,255,0.25)';
+  og.strokeStyle = rgba(curTheme.fg, 0.35);
   og.lineWidth = 1;
   og.beginPath();
   og.arc(cx, cy, base, 0, Math.PI * 2);
   og.stroke();
 
   if (!ctx || !running){
-    og.fillStyle = '#33333c';
+    og.fillStyle = curTheme.faint;
     og.font = '11px IBM Plex Mono, monospace';
     og.textAlign = 'center';
     og.fillText('POWER to begin', cx, cy + base + 18 < h ? cy + base + 18 : h - 10);

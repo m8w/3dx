@@ -49,6 +49,11 @@ public:
 
     juce::AudioProcessorValueTreeState apvts;
 
+    // UI-only setting (not a host parameter): index into Theme.h's themes(),
+    // persisted alongside apvts state so the chosen look survives reload.
+    int getThemeIndex() const { return themeIndex.load(); }
+    void setThemeIndex(int i) { themeIndex.store(i); }
+
     // Read by the editor for the breathing-orb visual.
     std::atomic<float> outputLevel { 0.0f };
 
@@ -68,6 +73,7 @@ private:
     OnePoleLP toneL, toneR;
 
     std::mt19937 rng { std::random_device{}() };
+    std::atomic<int> themeIndex { 0 };
 
     double rootFreq = 110.0; // A2
     double driftSemis = 0.0;
