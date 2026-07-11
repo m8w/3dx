@@ -12,6 +12,11 @@ Nothing needs to be plugged in: the patch seeds itself, so turning `ENGINE`
 on is enough to hear it drift. Everything is built from **stock Max/MSP
 objects only**, so it opens in vanilla Max 9 with no external dependencies.
 
+The 4 voices start with real pitches and a `loadbang` sets sane starting
+values on every gain-bearing stage (feedback, drive, mix, reverb, output
+gain, rotor spin), so turning on DSP alone should already be audible —
+you don't have to find and raise every slider first.
+
 ## Signal flow
 
 ```
@@ -91,3 +96,16 @@ The patch was built and statically verified in a non-Max environment (no
 Max 9 install available to test-load it directly), so if something behaves
 unexpectedly beyond the above, note which object/section and it can be
 adjusted.
+
+## If there's no sound
+
+- Make sure DSP is actually on (Options → Audio Status, or the small
+  audio toggle in Max's own overlay panel) and the right output device is
+  selected there — that panel is Max chrome, not part of this patch, so it
+  won't show up as an object in the patcher.
+- As of the current version the patch should be audible immediately once
+  DSP is on, with no sliders touched (see above). If it's still silent,
+  check whether `ENGINE`, `PANIC`, or any slider got dragged to an unusual
+  position while editing — the `LARSEN FEEDBACK` control in particular is
+  meant to be pushed *up* from its loadbang default (0.55) to self-oscillate
+  further, not down to zero.
