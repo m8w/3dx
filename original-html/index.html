@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>wvn / xik6 — Web Audio toys</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0c; --panel:#101014; --line:#1d1d24;
+  --fg:#c9c9ce; --dim:#5c5c66; --faint:#33333c;
+  --acc:#ffb347; --acc2:#47d7ff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--fg);
+  font-family:'IBM Plex Mono',Menlo,monospace;font-size:14px}
+#wrap{max-width:640px;margin:0 auto;padding:18px 16px 40px}
+header{border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:18px}
+h1{font-size:16px;font-weight:600;letter-spacing:.16em;margin:0}
+h1 span{color:var(--acc)}
+#sub{color:var(--dim);font-size:11px;letter-spacing:.08em;margin-top:4px}
+a.card{display:block;border:1px solid var(--line);background:var(--panel);
+  padding:16px;margin-bottom:12px;text-decoration:none;color:var(--fg)}
+a.card:hover{border-color:var(--acc)}
+a.card .name{font-size:14px;font-weight:600;letter-spacing:.1em;color:var(--acc)}
+a.card .desc{font-size:12px;color:var(--dim);margin-top:6px;line-height:1.5}
+footer{margin-top:24px;color:var(--dim);font-size:10px;line-height:1.7;letter-spacing:.04em}
+footer a{color:var(--acc2)}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <header>
+    <h1>WVN <span>//</span> web audio toys</h1>
+    <div id="sub">self-contained, no build step, stock nodes only</div>
+  </header>
+
+  <a class="card" href="serenity.html">
+    <div class="name">SERENITY</div>
+    <div class="desc">Ambient random generator — a slow pentatonic pad chord, wandering root,
+      and random FM chimes over a feedback-delay wash.</div>
+  </a>
+
+  <a class="card" href="shift.html">
+    <div class="name">SHIFT</div>
+    <div class="desc">Bode frequency shifter built from stock BiquadFilterNodes realizing a
+      Hilbert transformer, plus a phase-locked quadrature LO.</div>
+  </a>
+
+  <a class="card" href="cayley-ii.html">
+    <div class="name">CAYLEY II</div>
+    <div class="desc">8-voice octonion harmonic sequencer, cross-mixed by a spinning
+      unit-octonion rotor, with ghost/memory/swap/stasis intrusions.</div>
+  </a>
+
+  <footer>
+    Each toy has a THEME row under its header (VOID / DUSK / NEON / CANDY / FUNHOUSE).<br>
+    Source: <a href="https://github.com/m8w/3dx">github.com/m8w/3dx</a> — MIT license.
+  </footer>
+</div>
+</body>
+</html>
