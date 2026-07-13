@@ -9,7 +9,9 @@ This repo builds two JUCE VST3/Standalone instruments:
   No MIDI note required — five pad voices swell and fade on independent
   random clocks over a slowly root-drifting pentatonic/modal chord, while
   a random scheduler fires soft FM "chime" bells. See `original-html/
-  serenity.html` for a standalone Web Audio prototype of the same idea.
+  serenity.html` for a standalone Web Audio prototype of the same idea, and
+  `PureData/serenity.pd` for a vanilla-Pd patch of the same design (no
+  external libraries — open it in Pure Data 0.46+ and hit the POWER toggle).
 
 ## Quaternion
 
