@@ -175,6 +175,8 @@
 #X obj 220 1190 clip~ -1 1;
 #X obj 460 1190 clip~ -1 1;
 #X obj 220 1220 dac~;
+#X obj 340 1220 throw~ serenityOutL;
+#X obj 460 1220 throw~ serenityOutR;
 #X connect 9 0 10 0;
 #X connect 9 0 11 0;
 #X connect 9 0 12 0;
@@ -338,3 +340,5 @@
 #X connect 171 0 174 0;
 #X connect 173 0 175 0;
 #X connect 174 0 175 1;
+#X connect 173 0 176 0;
+#X connect 174 0 177 0;
