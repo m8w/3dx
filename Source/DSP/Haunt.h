@@ -52,7 +52,7 @@ struct AlgebraHaunt
         {
             if (intrudeEnv > 0.0) intrudeEnv -= 0.0008;
             else intrude = 0;
-            if (intrude == 1 && intrudeEnv > 0.0)
+            if ((intrude == 1 || intrude == 2) && intrudeEnv > 0.0)
                 applyIntrudeEffect(Z, intrudeEnv);
         }
 
