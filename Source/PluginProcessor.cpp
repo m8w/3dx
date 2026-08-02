@@ -263,6 +263,41 @@ void QuaternionAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, ju
     midiMessages.clear();
 }
 
+int QuaternionAudioProcessor::getNumPrograms()
+{
+    return static_cast<int>(Presets::factoryPresets().size());
+}
+
+const juce::String QuaternionAudioProcessor::getProgramName(int index)
+{
+    const auto& presets = Presets::factoryPresets();
+    if (index < 0 || index >= static_cast<int>(presets.size()))
+        return {};
+    return presets[static_cast<size_t>(index)].name;
+}
+
+void QuaternionAudioProcessor::setCurrentProgram(int index)
+{
+    const auto& presets = Presets::factoryPresets();
+    if (index < 0 || index >= static_cast<int>(presets.size()))
+        return;
+
+    currentProgram = index;
+    const auto& preset = presets[static_cast<size_t>(index)];
+    const auto& ids = Presets::paramIds();
+
+    for (size_t i = 0; i < ids.size(); ++i)
+    {
+        if (auto* param = apvts.getParameter(ids[i]))
+        {
+            float norm = param->convertTo0to1(preset.values[i]);
+            param->setValueNotifyingHost(norm);
+        }
+    }
+
+    updateHostDisplay(juce::AudioProcessorListener::ChangeDetails().withProgramChanged(true));
+}
+
 juce::AudioProcessorEditor* QuaternionAudioProcessor::createEditor()
 {
     return new QuaternionAudioProcessorEditor(*this);

@@ -83,6 +83,9 @@ private:
     GoniometerView gonio;
     SpectrumView spectrum;
 
+    juce::Label presetLabel;
+    juce::ComboBox presetBox;
+
     juce::Viewport viewport;
     juce::Component content;
     std::vector<std::unique_ptr<juce::Component>> rows; // owns Param/Choice/SectionHeader rows, in layout order

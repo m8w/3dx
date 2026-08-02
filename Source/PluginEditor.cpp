@@ -1,5 +1,6 @@
 #include "PluginEditor.h"
 #include "Params.h"
+#include "Presets.h"
 
 namespace Colours2
 {
@@ -146,6 +147,24 @@ QuaternionAudioProcessorEditor::QuaternionAudioProcessorEditor(QuaternionAudioPr
     addAndMakeVisible(gonio);
     addAndMakeVisible(spectrum);
 
+    presetLabel.setText("PRESET", juce::dontSendNotification);
+    presetLabel.setFont(juce::Font(juce::FontOptions(12.0f)));
+    presetLabel.setColour(juce::Label::textColourId, Colours2::dim);
+    addAndMakeVisible(presetLabel);
+
+    presetBox.setColour(juce::ComboBox::backgroundColourId, Colours2::panel);
+    presetBox.setColour(juce::ComboBox::textColourId, Colours2::fg);
+    presetBox.setColour(juce::ComboBox::outlineColourId, Colours2::line);
+    int i = 1;
+    for (auto& preset : Presets::factoryPresets())
+        presetBox.addItem(preset.name, i++);
+    presetBox.setSelectedItemIndex(proc.getCurrentProgram(), juce::dontSendNotification);
+    presetBox.onChange = [this]
+    {
+        proc.setCurrentProgram(presetBox.getSelectedItemIndex());
+    };
+    addAndMakeVisible(presetBox);
+
     addAndMakeVisible(viewport);
     viewport.setViewedComponent(&content, false);
     viewport.setScrollBarsShown(true, false);
@@ -183,8 +202,8 @@ QuaternionAudioProcessorEditor::QuaternionAudioProcessorEditor(QuaternionAudioPr
     addRow(Params::output, "OUTPUT");
 
     setResizable(true, true);
-    setSize(480, 720);
-    setResizeLimits(380, 480, 900, 1400);
+    setSize(480, 752);
+    setResizeLimits(380, 512, 900, 1400);
 }
 
 void QuaternionAudioProcessorEditor::addSection(const juce::String& text)
@@ -216,6 +235,11 @@ void QuaternionAudioProcessorEditor::paint(juce::Graphics& g)
 void QuaternionAudioProcessorEditor::resized()
 {
     auto b = getLocalBounds().reduced(10);
+
+    auto presetArea = b.removeFromTop(24);
+    presetLabel.setBounds(presetArea.removeFromLeft(56));
+    presetBox.setBounds(presetArea);
+    b.removeFromTop(8);
 
     auto scopesArea = b.removeFromTop(160);
     gonio.setBounds(scopesArea.removeFromLeft(160));
